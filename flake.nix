@@ -1,22 +1,22 @@
 {
-  description = "Flake to manage python workspace";
+  description = "Advent of Code devShell";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
-    flake-compat = {
-      url = "github:edolstra/flake-compat";
-      flake = false;
-    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs = { self, nixpkgs, ... }:
+  let
+    supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+    forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+  in
+  {
+    devShells = forAllSystems (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
       in
       {
-        devShells.default = with pkgs; mkShell {
+        default = with pkgs; mkShell {
           packages = [
             (python313.withPackages (ppg: [
               ppg.more-itertools
@@ -26,10 +26,12 @@
             ruff
             ocaml
             ocamlPackages.ocaml-lsp
+            ocamlPackages.ocamlformat
             ocamlPackages.utop
             # too hard
             # pdbpp
           ];
         };
       });
+  };
 }
